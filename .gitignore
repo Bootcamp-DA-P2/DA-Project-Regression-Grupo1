@@ -1,0 +1,44 @@
+# --- Python y Entornos ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# --- Jupyter Notebooks y Checkpoints ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Datos (MUY IMPORTANTE) ---
+# No subas los archivos de datos pesados al repo
+*.csv
+*.xlsx
+*.xls
+*.parquet
+*.json
+data/
+datasets/
+
+# --- Modelos entrenados ---
+# Archivos de modelos persistidos
+*.pkl
+*.joblib
+*.h5
+*.model
+
+# --- Aplicación Demo (Streamlit/Dashboard) ---
+.streamlit/
+# Si guardas sesiones o logs de la app
+*.log
+
+# --- IDEs y configuraciones ---
+.vscode/
+.idea/
+.DS_Store
+.history/
+
+# --- Otros ---
+# Carpetas de resultados de Optuna si las generas
+optuna-study/
