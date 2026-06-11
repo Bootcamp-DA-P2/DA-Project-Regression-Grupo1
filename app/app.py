@@ -170,7 +170,7 @@ elif page == "📊 Dashboard":
     k1.markdown(
         f"""
         <div class="metric-card">
-            <h4>🚲 Total de bicicletas alquiladas</h4>
+            <h4>🚲 Total alquileres</h4>
             <h2>{df_filtrado["cnt"].sum():,.0f}</h2>
         </div>
         """,
@@ -202,74 +202,70 @@ elif page == "📊 Dashboard":
     # =========================
     # GRÁFICAS
     # =========================
-    col1, col2 = st.columns(2)
 
     # ---- Demanda por hora ----
-    with col1:
+    df_hour = (
+        df_filtrado.groupby("hr")["cnt"]
+        .mean()
+        .reset_index()
+    )
 
-        df_hour = (
-            df_filtrado.groupby("hr")["cnt"]
-            .mean()
-            .reset_index()
-        )
+    df_hour.columns = ["Hora", "Bicicletas medias"]
 
-        df_hour.columns = ["Hora", "Bicicletas medias"]
+    fig_hour = px.bar(
+        df_hour,
+        x="Hora",
+        y="Bicicletas medias",
+        title="🚲 Demanda media por hora",
+        template="plotly_dark"
+    )
 
-        fig_hour = px.bar(
-            df_hour,
-            x="Hora",
-            y="Bicicletas medias",
-            title="🚲 Demanda media por hora",
-            template="plotly_dark"
-        )
+    fig_hour.update_traces(marker_color="#4cc9f0")
 
-        fig_hour.update_traces(marker_color="#4cc9f0")
+    fig_hour.update_layout(
+        title_x=0.5,
+        xaxis_title="Hora del día",
+        yaxis_title="Bicicletas",
+        xaxis=dict(dtick=1),
+        height=450
+    )
 
-        fig_hour.update_layout(
-            title_x=0.5,
-            xaxis_title="Hora del día",
-            yaxis_title="Bicicletas",
-            xaxis=dict(dtick=1)
-        )
-
-        st.plotly_chart(fig_hour, use_container_width=True)
+    st.plotly_chart(fig_hour, use_container_width=True)
 
     # ---- Demanda por clima ----
-    with col2:
+    weather_names = {
+        1: "Despejado",
+        2: "Niebla/Nubes",
+        3: "Lluvia ligera",
+        4: "Extremo"
+    }
 
-        weather_names = {
-            1: "Despejado",
-            2: "Niebla/Nubes",
-            3: "Lluvia ligera",
-            4: "Extremo"
-        }
+    df_weather = (
+        df_filtrado.groupby("weathersit")["cnt"]
+        .mean()
+        .reset_index()
+    )
 
-        df_weather = (
-            df_filtrado.groupby("weathersit")["cnt"]
-            .mean()
-            .reset_index()
-        )
+    df_weather["weathersit"] = df_weather["weathersit"].map(weather_names)
 
-        df_weather["weathersit"] = df_weather["weathersit"].map(weather_names)
+    fig_weather = px.bar(
+        df_weather,
+        x="weathersit",
+        y="cnt",
+        title="🌦️ Demanda media según clima",
+        template="plotly_dark"
+    )
 
-        fig_weather = px.bar(
-            df_weather,
-            x="weathersit",
-            y="cnt",
-            title="🌦️ Demanda media según clima",
-            template="plotly_dark"
-        )
+    fig_weather.update_traces(marker_color="#ffaf7b")
 
-        fig_weather.update_traces(marker_color="#ffaf7b")
+    fig_weather.update_layout(
+        title_x=0.5,
+        xaxis_title="Condición meteorológica",
+        yaxis_title="Bicicletas",
+        height=450
+    )
 
-        fig_weather.update_layout(
-            title_x=0.5,
-            xaxis_title="Condición meteorológica",
-            yaxis_title="Bicicletas"
-        )
-
-        st.plotly_chart(fig_weather, use_container_width=True)
-
+    st.plotly_chart(fig_weather, use_container_width=True)
     # =========================
     # INSIGHT
     # =========================
