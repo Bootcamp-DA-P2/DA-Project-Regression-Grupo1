@@ -1,149 +1,103 @@
 import streamlit as st
 import pandas as pd
 import joblib
+import plotly.express as px
 from pathlib import Path
 
-st.set_page_config(page_title="Bike Demand App", layout="wide")
+# --- CONFIGURACIÓN ---
+st.set_page_config(page_title="BikeDemand AI", page_icon="🚲", layout="wide")
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-MODEL_PATH = BASE_DIR / "models" / "xgboost_model.pkl"
-DATA_PATH = BASE_DIR / "data" / "bike_clean.csv"
-
-model = joblib.load(MODEL_PATH)
-df = pd.read_csv(DATA_PATH)
-
-# navegación estable
-if "page" not in st.session_state:
-    st.session_state.page = "🔮 Predicción"
-
-page = st.sidebar.radio(
-    "🚲 Navegación",
-    ["🔮 Predicción", "📊 Dashboard"]
-)
-
-st.session_state.page = page
-
+# --- CSS DARK PREMIUM ---
 st.markdown("""
 <style>
-.block-container {
-    padding-top: 2rem;
-}
-
-h1, h2, h3 {
-    font-weight: 600;
-}
-
-div[data-testid="stMetric"] {
-    background-color: #f6f8fa;
-    border-radius: 10px;
-    padding: 10px;
-}
+    .stApp { background-color: #050505; }
+    .metric-card {
+        background: rgba(30, 30, 30, 0.6);
+        padding: 20px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        text-align: center;
+    }
+    /* Quitar puntos de radio buttons */
+    [data-testid="stSidebar"] [role="radiogroup"] > label > div:first-child { display: none; }
+    [data-testid="stSidebar"] [role="radiogroup"] > label {
+        padding: 12px 15px; border-radius: 8px; background: #111;
+        margin-bottom: 5px; border: 1px solid #222; transition: 0.3s;
+    }
+    [data-testid="stSidebar"] [role="radiogroup"] > label:hover { background: #222; }
+    /* Botones */
+    div.stButton > button {
+        background: linear-gradient(90deg, #3a1c71, #d76d77, #ffaf7b);
+        color: white; border: none; border-radius: 8px; font-weight: bold; width: 100%;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-season_map = {1:"Invierno", 2:"Primavera", 3:"Verano", 4:"Otoño"}
+# --- CARGA DE DATOS ---
+@st.cache_resource
+def load_data():
+    BASE_DIR = Path(__file__).resolve().parent.parent
+    model = joblib.load(BASE_DIR / "models" / "xgboost_model.pkl")
+    df = pd.read_csv(BASE_DIR / "data" / "bike_clean.csv")
+    return model, df
 
-season_month_map = {
-    1: [12,1,2],
-    2: [3,4,5],
-    3: [6,7,8],
-    4: [9,10,11]
-}
+model, df = load_data()
 
-weathersit_map = {
-    1:"☀️ Despejado",
-    2:"⛅ Niebla",
-    3:"🌧️ Lluvia ligera",
-    4:"⛈️ Condiciones extremas"
-}
+# --- SIDEBAR ---
+with st.sidebar:
+    st.title("🚲 BikeDemand AI")
+    page = st.radio("NAVEGACIÓN", ["🏠 Inicio", "🔮 Predicción", "📊 Dashboard"])
 
-if page == "🔮 Predicción":
+# --- LÓGICA ---
+if page == "🏠 Inicio":
+    st.title("Optimización de Bicicletas 🚲")
+    st.write("Bienvenido al sistema de predicción basado en IA. Usa el menú izquierdo.")
 
-    st.title("🚲 Predicción de demanda")
-
-    st.markdown("Introduce las condiciones para estimar la demanda de bicicletas.")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        season = st.selectbox("Estación", list(season_map.keys()),
-                              format_func=lambda x: season_map[x])
-
-        yr = st.selectbox("Año", [0,1], format_func=lambda x: "2011" if x==0 else "2012")
-
-        mnth = st.selectbox("Mes", season_month_map[season])
-
-    with col2:
-        hr = st.slider("Hora", 0, 23)
-        weekday = st.slider("Día semana", 0, 6)
-
-        workingday = st.selectbox("Día laboral", [0,1], format_func=lambda x: "Sí" if x else "No")
-
-    with col3:
-        holiday = st.selectbox("Festivo", [0,1], format_func=lambda x: "Sí" if x else "No")
-
-        weathersit = st.selectbox(
-            "Clima",
-            list(weathersit_map.keys()),
-            format_func=lambda x: weathersit_map[x]
-        )
-
-    st.divider()
-
-    st.subheader("🌡️ Condiciones meteorológicas")
-
-    col4, col5, col6 = st.columns(3)
-
-    with col4:
-        temp = st.slider("Temperatura (normalizada)", 0.0, 1.0, 0.5)
-
-    with col5:
-        atemp = st.slider("Sensación térmica", 0.0, 1.0, 0.5)
-
-    with col6:
-        hum = st.slider("Humedad", 0.0, 1.0, 0.5)
-
-    windspeed = st.slider("Viento", 0.0, 1.0, 0.5)
-
-    input_data = pd.DataFrame([[season, yr, mnth, hr,
-                                holiday, weekday, workingday,
-                                weathersit, temp, atemp,
-                                hum, windspeed]],
-                              columns=[
-        "season","yr","mnth","hr",
-        "holiday","weekday","workingday",
-        "weathersit","temp","atemp",
-        "hum","windspeed"
-    ])
-
-    if st.button("🚀 Predecir", use_container_width=True):
-        prediction = model.predict(input_data)[0]
-
-        colA, colB = st.columns(2)
-
-        with colA:
-            st.metric("🚲 Bicicletas estimadas", int(prediction))
-
-        with colB:
-            st.success("Predicción realizada correctamente")
-
-elif page == "📊 Dashboard":
-
-    st.title("📊 Análisis de datos")
-
-    st.markdown("Resumen general del dataset de alquiler de bicicletas.")
+elif page == "🔮 Predicción":
+    st.title("🔮 Predicción con XGBoost")
+    
+    weathersit_map = {
+        1: "☀️ Despejado",
+        2: "⛅ Niebla",
+        3: "🌧️ Lluvia ligera",
+        4: "⛈️ Condiciones extremas"
+    }
 
     col1, col2 = st.columns(2)
-
     with col1:
-        st.subheader("📈 Distribución de demanda")
-        st.bar_chart(df["cnt"].value_counts().sort_index())
-
+        season_map = {1: "☀️ Invierno", 2: "🌱 Primavera", 3: "🔥 Verano", 4: "🍂 Otoño"}
+        season = st.selectbox("Estación", [1,2,3,4], format_func=lambda x: season_map[x])
+        hr = st.slider("Hora", 0, 23, 12)
+        workingday = st.selectbox("¿Día laboral?", [0, 1], format_func=lambda x: "Sí" if x else "No")
+        # Aquí hemos reinsertado el clima que faltaba
+        weathersit = st.selectbox("Clima", list(weathersit_map.keys()), format_func=lambda x: weathersit_map[x])
+    
     with col2:
-        st.subheader("⏰ Demanda media por hora")
-        st.bar_chart(df.groupby("hr")["cnt"].mean())
+        temp_c = st.slider("Temperatura (°C)", -8.0, 39.0, 20.0)
+        hum_pct = st.slider("Humedad (%)", 0, 100, 50)
+        wind_kmh = st.slider("Velocidad Viento (km/h)", 0, 67, 15)
+        
+        temp_norm = temp_c / 41.0
+        hum_norm = hum_pct / 100.0
+        wind_norm = wind_kmh / 67.0
 
-    st.divider()
+    if st.button("🚀 Ejecutar Predicción"):
+        input_data = pd.DataFrame([[season, 0, 1, hr, 0, 0, workingday, weathersit, temp_norm, temp_norm, hum_norm, wind_norm]],
+                                  columns=["season","yr","mnth","hr","holiday","weekday","workingday","weathersit","temp","atemp","hum","windspeed"])
+        pred = int(model.predict(input_data)[0])
+        st.markdown(f'<div class="metric-card"><h3>Demanda estimada ({temp_c}°C)</h3><h1 style="font-size: 50px; color: #ffaf7b;">{pred}</h1><p>bicicletas requeridas</p></div>', unsafe_allow_html=True)
 
-    st.subheader("📋 Estadísticas generales")
-    st.dataframe(df.describe(), use_container_width=True)
+elif page == "📊 Dashboard":
+    st.title("📊 Análisis de Datos")
+    k1, k2, k3 = st.columns(3)
+    k1.markdown(f'<div class="metric-card"><h3>Total Viajes</h3><h2>{df["cnt"].sum():,.0f}</h2></div>', unsafe_allow_html=True)
+    k2.markdown(f'<div class="metric-card"><h3>Media/Hora</h3><h2>{df["cnt"].mean():.1f}</h2></div>', unsafe_allow_html=True)
+    k3.markdown(f'<div class="metric-card"><h3>Hora Pico</h3><h2>{df.groupby("hr")["cnt"].mean().idxmax()}:00</h2></div>', unsafe_allow_html=True)
+    
+    st.write("##")
+    df_plot = df.groupby("hr")["cnt"].mean().reset_index()
+    df_plot.columns = ["hr", "Bicicletas"]
+    fig = px.bar(df_plot, x="hr", y="Bicicletas", template="plotly_dark")
+    fig.update_traces(marker_color='#ffaf7b')
+    st.plotly_chart(fig, use_container_width=True)
