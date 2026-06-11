@@ -7,6 +7,7 @@ from pathlib import Path
 # --- CONFIGURACIÓN ---
 st.set_page_config(page_title="BikeDemand AI", page_icon="🚲", layout="wide")
 
+
 # --- CSS DARK PREMIUM ---
 st.markdown("""
 <style>
@@ -46,13 +47,52 @@ model, df = load_data()
 
 # --- SIDEBAR ---
 with st.sidebar:
-    st.title("🚲 BikeDemand AI")
+    st.title("🚲 Bike Demand AI")
     page = st.radio("NAVEGACIÓN", ["🏠 Inicio", "🔮 Predicción", "📊 Dashboard"])
 
 # --- LÓGICA ---
 if page == "🏠 Inicio":
-    st.title("Optimización de Bicicletas 🚲")
-    st.write("Bienvenido al sistema de predicción basado en IA. Usa el menú izquierdo.")
+    st.title("🚲 Bike Demand AI")
+
+    st.markdown("""
+    Bienvenido al sistema de predicción de demanda de bicicletas mediante Machine Learning.
+
+    Esta aplicación estima cuántas bicicletas se alquilarán en un momento concreto
+    en función de variables temporales y meteorológicas.
+    """)
+    col1, col2, col3 = st.columns(3)
+
+    col1.metric("Modelo seleccionado", "XGBoost")
+    col2.metric("R² del modelo", "0.928")
+    col3.metric("MAE", "≈ 31 bicicletas")
+
+    results = pd.DataFrame({
+    "Modelo": ["Linear", "Ridge", "Lasso", "Decision Tree", "XGBoost"],
+    "MSE": [10131.41, 10128.22, 10124.64, 8915.71, 2220.47],
+    "MAE": [74.42, 74.41, 74.31, 69.57, 31.44],
+    "R2": [0.67, 0.67, 0.67, 0.71, 0.93],
+    "Overfitting": [0.019, 0.019, 0.018, 0.039, 0.026]
+    })
+
+    st.subheader("📊 Comparación de modelos")
+
+    st.dataframe(results, use_container_width=True)
+
+    best_model = results.loc[results["R2"].idxmax(), "Modelo"]
+
+    st.success(f"""
+    🏆 Mejor modelo: {best_model}
+
+    El modelo XGBoost es el que mejor generaliza los datos,
+    con el menor error y el mayor R².
+    """)
+
+    st.info("""
+    📌 Insight clave del modelo:
+
+    La variable más influyente en la predicción es la **hora del día**,
+    lo que indica un patrón claro de demanda ligado a horarios laborales y movilidad urbana.
+    """)
 
 elif page == "🔮 Predicción":
     st.title("🔮 Predicción con XGBoost")
@@ -86,18 +126,158 @@ elif page == "🔮 Predicción":
         input_data = pd.DataFrame([[season, 0, 1, hr, 0, 0, workingday, weathersit, temp_norm, temp_norm, hum_norm, wind_norm]],
                                   columns=["season","yr","mnth","hr","holiday","weekday","workingday","weathersit","temp","atemp","hum","windspeed"])
         pred = int(model.predict(input_data)[0])
-        st.markdown(f'<div class="metric-card"><h3>Demanda estimada ({temp_c}°C)</h3><h1 style="font-size: 50px; color: #ffaf7b;">{pred}</h1><p>bicicletas requeridas</p></div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="metric-card"><h3>Demanda estimada</h3><h1 style="font-size: 50px; color: #ffaf7b;">{pred}</h1><p>bicicletas requeridas</p></div>', unsafe_allow_html=True)
 
 elif page == "📊 Dashboard":
     st.title("📊 Análisis de Datos")
-    k1, k2, k3 = st.columns(3)
-    k1.markdown(f'<div class="metric-card"><h3>Total Viajes</h3><h2>{df["cnt"].sum():,.0f}</h2></div>', unsafe_allow_html=True)
-    k2.markdown(f'<div class="metric-card"><h3>Media/Hora</h3><h2>{df["cnt"].mean():.1f}</h2></div>', unsafe_allow_html=True)
-    k3.markdown(f'<div class="metric-card"><h3>Hora Pico</h3><h2>{df.groupby("hr")["cnt"].mean().idxmax()}:00</h2></div>', unsafe_allow_html=True)
+
+    f1, f2 = st.columns(2)
+
+    with f1:
+        year_filter = st.selectbox(
+            "📅 Año",
+            ["Todos", "2011", "2012"]
+        )
+
+    with f2:
+        day_filter = st.selectbox(
+            "📆 Tipo de día",
+            ["Todos", "Laborable", "No laborable"]
+        )
     
+    # =========================
+    # FILTROS
+    # =========================
+    df_filtrado = df.copy()
+
+    if year_filter == "2011":
+        df_filtrado = df_filtrado[df_filtrado["yr"] == 0]
+
+    elif year_filter == "2012":
+        df_filtrado = df_filtrado[df_filtrado["yr"] == 1]
+
+    if day_filter == "Laborable":
+        df_filtrado = df_filtrado[df_filtrado["workingday"] == 1]
+
+    elif day_filter == "No laborable":
+        df_filtrado = df_filtrado[df_filtrado["workingday"] == 0]
+
+    # =========================
+    # KPIs
+    # =========================
+    k1, k2, k3 = st.columns(3)
+
+    k1.markdown(
+        f"""
+        <div class="metric-card">
+            <h4>🚲 Total de bicicletas alquiladas</h4>
+            <h2>{df_filtrado["cnt"].sum():,.0f}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    k2.markdown(
+        f"""
+        <div class="metric-card">
+            <h4>📊 Demanda media</h4>
+            <h2>{df_filtrado["cnt"].mean():.1f}</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    k3.markdown(
+        f"""
+        <div class="metric-card">
+            <h4>⏰ Hora pico</h4>
+            <h2>{df_filtrado.groupby("hr")["cnt"].mean().idxmax()}:00</h2>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
     st.write("##")
-    df_plot = df.groupby("hr")["cnt"].mean().reset_index()
-    df_plot.columns = ["hr", "Bicicletas"]
-    fig = px.bar(df_plot, x="hr", y="Bicicletas", template="plotly_dark")
-    fig.update_traces(marker_color='#ffaf7b')
-    st.plotly_chart(fig, use_container_width=True)
+
+    # =========================
+    # GRÁFICAS
+    # =========================
+    col1, col2 = st.columns(2)
+
+    # ---- Demanda por hora ----
+    with col1:
+
+        df_hour = (
+            df_filtrado.groupby("hr")["cnt"]
+            .mean()
+            .reset_index()
+        )
+
+        df_hour.columns = ["Hora", "Bicicletas medias"]
+
+        fig_hour = px.bar(
+            df_hour,
+            x="Hora",
+            y="Bicicletas medias",
+            title="🚲 Demanda media por hora",
+            template="plotly_dark"
+        )
+
+        fig_hour.update_traces(marker_color="#4cc9f0")
+
+        fig_hour.update_layout(
+            title_x=0.5,
+            xaxis_title="Hora del día",
+            yaxis_title="Bicicletas",
+            xaxis=dict(dtick=1)
+        )
+
+        st.plotly_chart(fig_hour, use_container_width=True)
+
+    # ---- Demanda por clima ----
+    with col2:
+
+        weather_names = {
+            1: "Despejado",
+            2: "Niebla/Nubes",
+            3: "Lluvia ligera",
+            4: "Extremo"
+        }
+
+        df_weather = (
+            df_filtrado.groupby("weathersit")["cnt"]
+            .mean()
+            .reset_index()
+        )
+
+        df_weather["weathersit"] = df_weather["weathersit"].map(weather_names)
+
+        fig_weather = px.bar(
+            df_weather,
+            x="weathersit",
+            y="cnt",
+            title="🌦️ Demanda media según clima",
+            template="plotly_dark"
+        )
+
+        fig_weather.update_traces(marker_color="#ffaf7b")
+
+        fig_weather.update_layout(
+            title_x=0.5,
+            xaxis_title="Condición meteorológica",
+            yaxis_title="Bicicletas"
+        )
+
+        st.plotly_chart(fig_weather, use_container_width=True)
+
+    # =========================
+    # INSIGHT
+    # =========================
+    st.info(
+        f"""
+        📌 **Insight principal**
+
+        La mayor demanda se registra alrededor de las **{df.groupby("hr")["cnt"].mean().idxmax()}:00 horas**.
+        Además, las condiciones meteorológicas favorables incrementan significativamente el uso del servicio.
+        """
+    )
