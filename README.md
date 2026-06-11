@@ -2,6 +2,8 @@
 
 Este proyecto es una solución integral de Machine Learning diseñada para predecir la demanda de bicicletas compartidas.
 
+[Dataset de bicicletas](https://archive.ics.uci.edu/dataset/275/bike+sharing+dataset)
+
 ## 🚀 Descripción del Proyecto
 El objetivo es estimar el flujo de usuarios basándose en variables meteorológicas, temporales y de calendario, optimizando la logística de las estaciones.
 
@@ -17,16 +19,25 @@ El objetivo es estimar el flujo de usuarios basándose en variables meteorológi
 3. **App de Predicción**: Interfaz en tiempo real integrada con el modelo.
 
 ## ⚙️ Cómo ejecutar la aplicación
-
-# 1. Crear el entorno vitual
+# 1. Descargar dataset
+    Es necesario crear la carpeta data en local 
+    En el enlace de arriba es necesario descargar los archivos csv 
+    El archivo hours.csv es necesario renombrarlo a bike_sharing_hour y introducirlo en la carpeta data 
+# 2. Crear el entorno vitual
     python -m venv venv
 # En Windows:
     venv\Scripts\activate
 # En macOS/Linux:
     source venv/bin/activate
-# 2. Instalar dependecias
+# 3. Instalar dependecias
     pip install -r requirements.txt
-# 3. Ejecutar la aplicacion
+# 4. Ejecutar
+    Sera necesario ejecutar el archivo de 01_limpieza_eda
+        al ejecutarlo se generara el archivo bike_clean 
+    Luego ejecutaras el archivo 02_modelo_regresion
+        al ejecutarlo se genera la carpeta de models con los distintos modelos necesarios
+
+# 5. Ejecutar la aplicacion
     streamlit run app.py
 
 
