@@ -52,7 +52,7 @@ with st.sidebar:
 
 # --- LÓGICA ---
 if page == "🏠 Inicio":
-    st.title("🚲 Bike Demand AI")
+    st.title("🚲 BikeDemand AI")
 
     st.markdown("""
     Bienvenido al sistema de predicción de demanda de bicicletas mediante Machine Learning.
