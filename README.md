@@ -363,6 +363,21 @@ streamlit run app/app.py
 ├── requirements.txt
 └── README.md
 ```
+---
+
+## 📋 Gestión del Proyecto
+
+Para la organización y seguimiento del trabajo se ha utilizado un tablero Kanban, permitiendo gestionar tareas, asignar responsabilidades y monitorizar el avance del proyecto de forma colaborativa.
+
+🔗 [Tablero Kanban del proyecto](https://github.com/orgs/Bootcamp-DA-P2/projects/25/views/2)
+
+---
+
+## 🎤 Presentación del Proyecto
+
+La presentación completa del proyecto, incluyendo la explicación del problema, metodología, resultados y demostración de la aplicación, está disponible en:
+
+🔗 [Presentación BikeDemand AI](https://gamma.app/docs/Bike-Sharing-Prediccion-Horaria-0xiv4h1ao5cmbg8)
 
 ---
 
