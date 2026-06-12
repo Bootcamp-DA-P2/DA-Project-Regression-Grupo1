@@ -179,11 +179,20 @@ Fue seleccionado por ofrecer el mejor equilibrio entre precisión y capacidad de
 | R²      | 0.928            |
 | MAE     | 31.44 bicicletas |
 
-### Conclusiones
 
 El análisis de importancia de variables mostró que:
 
 🚲 **La hora del día es el factor más influyente en la demanda de bicicletas**, reflejando claramente los patrones de movilidad asociados a horarios laborales y desplazamientos urbanos.
+
+---
+
+# 🧠 Conclusión
+
+Este proyecto aplica Machine Learning para predecir la demanda de bicicletas en función de variables temporales y meteorológicas.
+
+Se ha desarrollado un flujo completo desde el análisis de datos hasta el despliegue de una aplicación interactiva, comparando distintos modelos de regresión.
+
+El modelo final (XGBoost) ofrece un alto rendimiento, destacando la influencia de la hora del día y las condiciones climáticas en la demanda.
 
 ---
 
@@ -377,7 +386,7 @@ Para la organización y seguimiento del trabajo se ha utilizado un tablero Kanba
 
 La presentación completa del proyecto, incluyendo la explicación del problema, metodología, resultados y demostración de la aplicación, está disponible en:
 
-🔗 [Presentación BikeDemand AI](https://gamma.app/docs/Bike-Sharing-Prediccion-Horaria-0xiv4h1ao5cmbg8)
+🔗 [Presentación BikeDemand AI](https://canva.link/luxtb5l8prz4c5o)
 
 ---
 
